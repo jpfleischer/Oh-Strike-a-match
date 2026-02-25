@@ -10,11 +10,11 @@ var game = require('./game.js');
 
 /**
 * Setup http server to listen on port 
-* 3000
+ * 4856
 */
 
-http.listen(3000, function () {
-    console.log('listening on *:3000');
+http.listen(4856, function () {
+    console.log('listening on *:4856');
 });
 
 /**

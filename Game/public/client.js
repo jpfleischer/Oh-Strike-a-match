@@ -12,6 +12,7 @@ var choice =
     }
 
 var soundUrls = ['A.m4a', 'B.m4a', 'C.m4a'];
+var introTimer;
 
 $(document).ready(function(){
     setNothingState();
@@ -81,7 +82,26 @@ function setNothingState(){
     $('#game-area').hide();
     $('#gameover-area').hide();
     $('#waiting-for-players-area').hide();
+    $('#game-intro-area').hide();
 }
+
+socket.on('game intro', function(msg){
+    clearInterval(gameTimer);
+    if(introTimer){
+        clearTimeout(introTimer);
+    }
+    $('#game-in-progress-area').hide();
+    $('#between-round-area').hide();
+    $('#game-area').hide();
+    $('#gameover-area').hide();
+    $('#waiting-for-players-area').hide();
+    $('#game-intro-area').show();
+    
+    var duration = (msg && msg.duration) ? msg.duration : 4000;
+    introTimer = setTimeout(function(){
+        $('#game-intro-area').hide();
+    }, duration);
+});
 
 socket.on('game in progress', function(msg){
     clearInterval(gameTimer);
@@ -90,6 +110,7 @@ socket.on('game in progress', function(msg){
     $('#game-area').hide();
     $('#gameover-area').hide();
     $('#waiting-for-players-area').hide();
+    $('#game-intro-area').hide();
 });
 
 socket.on('waiting for players', function(msg){
@@ -98,6 +119,7 @@ socket.on('waiting for players', function(msg){
     $('#game-area').hide();
     $('#gameover-area').hide();
     $('#waiting-for-players-area').show();
+    $('#game-intro-area').hide();
 });
 
 socket.on('between rounds', function(){
@@ -106,6 +128,7 @@ socket.on('between rounds', function(){
     $('#game-area').hide();
     $('#gameover-area').hide();
     $('#waiting-for-players-area').hide();
+    $('#game-intro-area').hide();
 });
 
 socket.on('round countdown', function(msg){
@@ -115,6 +138,7 @@ socket.on('round countdown', function(msg){
     $('#game-area').hide();
     $('#gameover-area').hide();
     $('#waiting-for-players-area').hide();
+    $('#game-intro-area').hide();
     $('#round-countdown-field').text(msg.time);
 });
  
@@ -130,7 +154,8 @@ socket.on('next round', function(round){
     $('#game-area').show();
     $('#gameover-area').hide();
     $('#waiting-for-players-area').hide();
-    $('#answer-area').text("");  
+    $('#game-intro-area').hide();
+    $('#answer-area').text(round.theme || "");  
 });
 
 socket.on('round ended', function(msg){
@@ -139,7 +164,9 @@ socket.on('round ended', function(msg){
     $('#game-area').show();
     $('#gameover-area').hide();
     $('#waiting-for-players-area').hide();
+    $('#game-intro-area').hide();
     $('#answer-area').text(msg.answer);    
+    showCorrectChoices(msg.choices || []);
 });
 
 socket.on('game over', function(msg){
@@ -148,6 +175,7 @@ socket.on('game over', function(msg){
     $('#game-area').hide();
     $('#gameover-area').show();
     $('#waiting-for-players-area').hide();
+    $('#game-intro-area').hide();
 });
 
 //
@@ -168,6 +196,8 @@ function setCells(round){
 
         console.log(cellId);
         $(cellId).css({backgroundColor: 'transparent'});
+        $(cellId).removeClass('correct');
+        $(cellId).removeClass('incorrect');
         $(cellId).text(option);
     }
     
@@ -198,6 +228,23 @@ function fillCell(buttonId){
     $('#'+buttonId).css({backgroundColor: 'white'});
 }
 
+function showCorrectChoices(choices){
+    var choiceSet = {};
+    for (var i = 0; i < choices.length; i++){
+        choiceSet[choices[i]] = true;
+    }
+    
+    $('.option').each(function(){
+        var text = $(this).text();
+        $(this).css({backgroundColor: ''});
+        if(choiceSet[text]){
+            $(this).addClass('correct');
+        }else{
+            $(this).addClass('incorrect');
+        }
+    });
+}
+
 var gameTimer;
 function startTimer(time){
     var gameTime = time;
@@ -212,10 +259,6 @@ function startTimer(time){
         }
     }, 1000);
 }
-
-
-
-
 
 
 
